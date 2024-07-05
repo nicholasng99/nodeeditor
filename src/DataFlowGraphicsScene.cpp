@@ -37,7 +37,7 @@ DataFlowGraphicsScene::DataFlowGraphicsScene(DataFlowGraphModel &graphModel, QOb
             [this](NodeId const nodeId, PortType const, PortIndex const) { onNodeUpdated(nodeId); });
 }
 
-// TODO constructor for an empyt scene?
+// TODO constructor for an empty scene?
 
 std::vector<NodeId> DataFlowGraphicsScene::selectedNodes() const
 {
