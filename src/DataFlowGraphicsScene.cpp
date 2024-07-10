@@ -109,6 +109,7 @@ QMenu *DataFlowGraphicsScene::createSceneMenu(QPointF const scenePos)
                     return;
                 }
 
+                // This is how nodes are created into the scene
                 this->undoStack().push(new CreateCommand(this, item->text(0), scenePos));
 
                 modelMenu->close();
