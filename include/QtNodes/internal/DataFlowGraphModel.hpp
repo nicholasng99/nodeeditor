@@ -96,6 +96,8 @@ public:
         return model;
     }
 
+    bool isEmpty() const { return _models.empty() && _connectivity.empty(); }
+
 Q_SIGNALS:
     void inPortDataWasSet(NodeId const, PortType const, PortIndex const);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QFileInfo>
+
 #include "BasicGraphicsScene.hpp"
 #include "DataFlowGraphModel.hpp"
 #include "Export.hpp"
@@ -16,24 +18,25 @@ class NODE_EDITOR_PUBLIC DataFlowGraphicsScene : public BasicGraphicsScene
     Q_OBJECT
 public:
     DataFlowGraphicsScene(DataFlowGraphModel &graphModel, QObject *parent = nullptr);
-
     ~DataFlowGraphicsScene() = default;
-
-public:
     std::vector<NodeId> selectedNodes() const;
-
-public:
     QMenu *createSceneMenu(QPointF const scenePos) override;
+    QFileInfo getFile() const { return _file; }
+    bool isEmpty() const { return _graphModel.isEmpty(); }
+    bool isBlank() const { return _graphModel.isEmpty(); }
 
 public Q_SLOTS:
     bool save() const;
-
+    bool saveAs() const;
     bool load();
 
 Q_SIGNALS:
     void sceneLoaded();
 
 private:
+    bool writeToFile() const;
+
+    mutable QFileInfo _file;
     DataFlowGraphModel &_graphModel;
 };
 
