@@ -3,7 +3,7 @@
 #include <QFileInfo>
 
 #include "BasicGraphicsScene.hpp"
-#include "DataFlowGraphModel.hpp"
+#include "DagGraphModel.hpp"
 #include "Export.hpp"
 
 namespace QtNodes {
@@ -13,12 +13,12 @@ namespace QtNodes {
  * The class represents a scene that existed in v2.x but built wit the
  * new model-view approach in mind.
  */
-class NODE_EDITOR_PUBLIC DataFlowGraphicsScene : public BasicGraphicsScene
+class NODE_EDITOR_PUBLIC DagGraphicsScene : public BasicGraphicsScene
 {
     Q_OBJECT
 public:
-    DataFlowGraphicsScene(DataFlowGraphModel &graphModel, QObject *parent = nullptr);
-    ~DataFlowGraphicsScene() = default;
+    DagGraphicsScene(DagGraphModel &graphModel, QObject *parent = nullptr);
+    ~DagGraphicsScene() = default;
     std::vector<NodeId> selectedNodes() const;
     QMenu *createSceneMenu(QPointF const scenePos) override;
     QFileInfo getFile() const { return _file; }
@@ -37,7 +37,7 @@ private:
     bool writeToFile() const;
 
     mutable QFileInfo _file;
-    DataFlowGraphModel &_graphModel;
+    DagGraphModel &_graphModel;
 };
 
 } // namespace QtNodes

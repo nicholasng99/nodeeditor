@@ -1,4 +1,4 @@
-#include "DataFlowGraphicsScene.hpp"
+#include "DagGraphicsScene.hpp"
 
 #include "ConnectionGraphicsObject.hpp"
 #include "GraphicsView.hpp"
@@ -28,18 +28,18 @@
 
 namespace QtNodes {
 
-DataFlowGraphicsScene::DataFlowGraphicsScene(DataFlowGraphModel &graphModel, QObject *parent)
+DagGraphicsScene::DagGraphicsScene(DagGraphModel &graphModel, QObject *parent)
     : BasicGraphicsScene(graphModel, parent)
     , _graphModel(graphModel)
 {
     connect(&_graphModel,
-            &DataFlowGraphModel::inPortDataWasSet,
+            &DagGraphModel::inPortDataWasSet,
             [this](NodeId const nodeId, PortType const, PortIndex const) { onNodeUpdated(nodeId); });
 }
 
 // TODO constructor for an empty scene?
 
-std::vector<NodeId> DataFlowGraphicsScene::selectedNodes() const
+std::vector<NodeId> DagGraphicsScene::selectedNodes() const
 {
     QList<QGraphicsItem *> graphicsItems = selectedItems();
 
@@ -57,7 +57,7 @@ std::vector<NodeId> DataFlowGraphicsScene::selectedNodes() const
     return result;
 }
 
-QMenu *DataFlowGraphicsScene::createSceneMenu(QPointF const scenePos)
+QMenu *DagGraphicsScene::createSceneMenu(QPointF const scenePos)
 {
     QMenu *modelMenu = new QMenu();
 
@@ -145,14 +145,14 @@ QMenu *DataFlowGraphicsScene::createSceneMenu(QPointF const scenePos)
     return modelMenu;
 }
 
-bool DataFlowGraphicsScene::save() const
+bool DagGraphicsScene::save() const
 {
     if (_file.filePath().isEmpty() || _file.suffix().isEmpty())
         return saveAs();
     return writeToFile();
 }
 
-bool DataFlowGraphicsScene::saveAs() const
+bool DagGraphicsScene::saveAs() const
 {
     _file.setFile(QFileDialog::getSaveFileName(nullptr,
                                                tr("Open Flow Scene"),
@@ -163,7 +163,7 @@ bool DataFlowGraphicsScene::saveAs() const
     return writeToFile();
 }
 
-bool DataFlowGraphicsScene::load()
+bool DagGraphicsScene::load()
 {
     _file.setFile(QFileDialog::getOpenFileName(nullptr,
                                                tr("Open Flow Scene"),
@@ -189,7 +189,7 @@ bool DataFlowGraphicsScene::load()
     return true;
 }
 
-bool DataFlowGraphicsScene::writeToFile() const
+bool DagGraphicsScene::writeToFile() const
 {
     if (_file.suffix().compare("flow", Qt::CaseInsensitive) != 0)
         _file.setFile(_file.dir(), _file.baseName() + ".flow");

@@ -1,4 +1,4 @@
-#include "DataFlowGraphModel.hpp"
+#include "DagGraphModel.hpp"
 #include "ConnectionIdHash.hpp"
 
 #include <QJsonArray>
@@ -7,12 +7,12 @@
 
 namespace QtNodes {
 
-DataFlowGraphModel::DataFlowGraphModel(std::shared_ptr<NodeDelegateModelRegistry> registry)
+DagGraphModel::DagGraphModel(std::shared_ptr<NodeDelegateModelRegistry> registry)
     : _registry(std::move(registry))
     , _nextNodeId{0}
 {}
 
-std::unordered_set<NodeId> DataFlowGraphModel::allNodeIds() const
+std::unordered_set<NodeId> DagGraphModel::allNodeIds() const
 {
     std::unordered_set<NodeId> nodeIds;
     for_each(_models.begin(), _models.end(), [&nodeIds](auto const &p) { nodeIds.insert(p.first); });
@@ -20,7 +20,7 @@ std::unordered_set<NodeId> DataFlowGraphModel::allNodeIds() const
     return nodeIds;
 }
 
-std::unordered_set<ConnectionId> DataFlowGraphModel::allConnectionIds(NodeId const nodeId) const
+std::unordered_set<ConnectionId> DagGraphModel::allConnectionIds(NodeId const nodeId) const
 {
     std::unordered_set<ConnectionId> result;
 
@@ -34,9 +34,9 @@ std::unordered_set<ConnectionId> DataFlowGraphModel::allConnectionIds(NodeId con
     return result;
 }
 
-std::unordered_set<ConnectionId> DataFlowGraphModel::connections(NodeId nodeId,
-                                                                 PortType portType,
-                                                                 PortIndex portIndex) const
+std::unordered_set<ConnectionId> DagGraphModel::connections(NodeId nodeId,
+                                                            PortType portType,
+                                                            PortIndex portIndex) const
 {
     std::unordered_set<ConnectionId> result;
 
@@ -51,12 +51,12 @@ std::unordered_set<ConnectionId> DataFlowGraphModel::connections(NodeId nodeId,
     return result;
 }
 
-bool DataFlowGraphModel::connectionExists(ConnectionId const connectionId) const
+bool DagGraphModel::connectionExists(ConnectionId const connectionId) const
 {
     return (_connectivity.find(connectionId) != _connectivity.end());
 }
 
-NodeId DataFlowGraphModel::addNode(QString const nodeType)
+NodeId DagGraphModel::addNode(QString const nodeType)
 {
     std::unique_ptr<NodeDelegateModel> model = _registry->create(nodeType);
 
@@ -76,10 +76,7 @@ NodeId DataFlowGraphModel::addNode(QString const nodeType)
                     portsAboutToBeDeleted(newId, portType, first, last);
                 });
 
-        connect(model.get(),
-                &NodeDelegateModel::portsDeleted,
-                this,
-                &DataFlowGraphModel::portsDeleted);
+        connect(model.get(), &NodeDelegateModel::portsDeleted, this, &DagGraphModel::portsDeleted);
 
         connect(model.get(),
                 &NodeDelegateModel::portsAboutToBeInserted,
@@ -88,10 +85,7 @@ NodeId DataFlowGraphModel::addNode(QString const nodeType)
                     portsAboutToBeInserted(newId, portType, first, last);
                 });
 
-        connect(model.get(),
-                &NodeDelegateModel::portsInserted,
-                this,
-                &DataFlowGraphModel::portsInserted);
+        connect(model.get(), &NodeDelegateModel::portsInserted, this, &DagGraphModel::portsInserted);
 
         _models[newId] = std::move(model);
 
@@ -103,7 +97,7 @@ NodeId DataFlowGraphModel::addNode(QString const nodeType)
     return InvalidNodeId;
 }
 
-bool DataFlowGraphModel::connectionPossible(ConnectionId const connectionId) const
+bool DagGraphModel::connectionPossible(ConnectionId const connectionId) const
 {
     auto getDataType = [&](PortType const portType) {
         return portData(getNodeId(portType, connectionId),
@@ -128,7 +122,7 @@ bool DataFlowGraphModel::connectionPossible(ConnectionId const connectionId) con
            && portVacant(PortType::Out) && portVacant(PortType::In);
 }
 
-void DataFlowGraphModel::addConnection(ConnectionId const connectionId)
+void DagGraphModel::addConnection(ConnectionId const connectionId)
 {
     _connectivity.insert(connectionId);
 
@@ -146,7 +140,7 @@ void DataFlowGraphModel::addConnection(ConnectionId const connectionId)
                 PortRole::Data);
 }
 
-void DataFlowGraphModel::sendConnectionCreation(ConnectionId const connectionId)
+void DagGraphModel::sendConnectionCreation(ConnectionId const connectionId)
 {
     Q_EMIT connectionCreated(connectionId);
 
@@ -160,7 +154,7 @@ void DataFlowGraphModel::sendConnectionCreation(ConnectionId const connectionId)
     }
 }
 
-void DataFlowGraphModel::sendConnectionDeletion(ConnectionId const connectionId)
+void DagGraphModel::sendConnectionDeletion(ConnectionId const connectionId)
 {
     Q_EMIT connectionDeleted(connectionId);
 
@@ -174,12 +168,12 @@ void DataFlowGraphModel::sendConnectionDeletion(ConnectionId const connectionId)
     }
 }
 
-bool DataFlowGraphModel::nodeExists(NodeId const nodeId) const
+bool DagGraphModel::nodeExists(NodeId const nodeId) const
 {
     return (_models.find(nodeId) != _models.end());
 }
 
-QVariant DataFlowGraphModel::nodeData(NodeId nodeId, NodeRole role) const
+QVariant DagGraphModel::nodeData(NodeId nodeId, NodeRole role) const
 {
     QVariant result;
 
@@ -241,7 +235,7 @@ QVariant DataFlowGraphModel::nodeData(NodeId nodeId, NodeRole role) const
     return result;
 }
 
-NodeFlags DataFlowGraphModel::nodeFlags(NodeId nodeId) const
+NodeFlags DagGraphModel::nodeFlags(NodeId nodeId) const
 {
     auto it = _models.find(nodeId);
 
@@ -251,7 +245,7 @@ NodeFlags DataFlowGraphModel::nodeFlags(NodeId nodeId) const
     return NodeFlag::NoFlags;
 }
 
-bool DataFlowGraphModel::setNodeData(NodeId nodeId, NodeRole role, QVariant value)
+bool DagGraphModel::setNodeData(NodeId nodeId, NodeRole role, QVariant value)
 {
     Q_UNUSED(nodeId);
     Q_UNUSED(role);
@@ -300,10 +294,10 @@ bool DataFlowGraphModel::setNodeData(NodeId nodeId, NodeRole role, QVariant valu
     return result;
 }
 
-QVariant DataFlowGraphModel::portData(NodeId nodeId,
-                                      PortType portType,
-                                      PortIndex portIndex,
-                                      PortRole role) const
+QVariant DagGraphModel::portData(NodeId nodeId,
+                                 PortType portType,
+                                 PortIndex portIndex,
+                                 PortRole role) const
 {
     QVariant result;
 
@@ -340,7 +334,7 @@ QVariant DataFlowGraphModel::portData(NodeId nodeId,
     return result;
 }
 
-bool DataFlowGraphModel::setPortData(
+bool DagGraphModel::setPortData(
     NodeId nodeId, PortType portType, PortIndex portIndex, QVariant const &value, PortRole role)
 {
     Q_UNUSED(nodeId);
@@ -370,7 +364,7 @@ bool DataFlowGraphModel::setPortData(
     return false;
 }
 
-bool DataFlowGraphModel::deleteConnection(ConnectionId const connectionId)
+bool DagGraphModel::deleteConnection(ConnectionId const connectionId)
 {
     bool disconnected = false;
 
@@ -392,7 +386,7 @@ bool DataFlowGraphModel::deleteConnection(ConnectionId const connectionId)
     return disconnected;
 }
 
-bool DataFlowGraphModel::deleteNode(NodeId const nodeId)
+bool DagGraphModel::deleteNode(NodeId const nodeId)
 {
     // Delete connections to this node first.
     auto connectionIds = allConnectionIds(nodeId);
@@ -408,7 +402,7 @@ bool DataFlowGraphModel::deleteNode(NodeId const nodeId)
     return true;
 }
 
-QJsonObject DataFlowGraphModel::saveNode(NodeId const nodeId) const
+QJsonObject DagGraphModel::saveNode(NodeId const nodeId) const
 {
     QJsonObject nodeJson;
 
@@ -428,7 +422,7 @@ QJsonObject DataFlowGraphModel::saveNode(NodeId const nodeId) const
     return nodeJson;
 }
 
-QJsonObject DataFlowGraphModel::save() const
+QJsonObject DagGraphModel::save() const
 {
     QJsonObject sceneJson;
 
@@ -447,7 +441,7 @@ QJsonObject DataFlowGraphModel::save() const
     return sceneJson;
 }
 
-void DataFlowGraphModel::loadNode(QJsonObject const &nodeJson)
+void DagGraphModel::loadNode(QJsonObject const &nodeJson)
 {
     // Possibility of the id clash when reading it from json and not generating a
     // new value.
@@ -489,7 +483,7 @@ void DataFlowGraphModel::loadNode(QJsonObject const &nodeJson)
     }
 }
 
-void DataFlowGraphModel::load(QJsonObject const &jsonDocument)
+void DagGraphModel::load(QJsonObject const &jsonDocument)
 {
     QJsonArray nodesJsonArray = jsonDocument["nodes"].toArray();
 
@@ -509,7 +503,7 @@ void DataFlowGraphModel::load(QJsonObject const &jsonDocument)
     }
 }
 
-void DataFlowGraphModel::onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex)
+void DagGraphModel::onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex)
 {
     std::unordered_set<ConnectionId> const &connected = connections(nodeId,
                                                                     PortType::Out,
@@ -522,7 +516,7 @@ void DataFlowGraphModel::onOutPortDataUpdated(NodeId const nodeId, PortIndex con
     }
 }
 
-void DataFlowGraphModel::propagateEmptyDataTo(NodeId const nodeId, PortIndex const portIndex)
+void DagGraphModel::propagateEmptyDataTo(NodeId const nodeId, PortIndex const portIndex)
 {
     QVariant emptyData{};
 

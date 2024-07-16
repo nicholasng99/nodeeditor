@@ -14,7 +14,7 @@
 
 namespace QtNodes {
 
-class NODE_EDITOR_PUBLIC DataFlowGraphModel
+class NODE_EDITOR_PUBLIC DagGraphModel
     : public AbstractGraphModel
     , public Serializable
 {
@@ -28,7 +28,7 @@ public:
     };
 
 public:
-    DataFlowGraphModel(std::shared_ptr<NodeDelegateModelRegistry> registry);
+    DagGraphModel(std::shared_ptr<NodeDelegateModelRegistry> registry);
 
     std::shared_ptr<NodeDelegateModelRegistry> dataModelRegistry() { return _registry; }
 
@@ -113,11 +113,11 @@ private Q_SLOTS:
    * Fuction is called in three cases:
    *
    * - By underlying NodeDelegateModel when a node has new data to propagate.
-   *   @see DataFlowGraphModel::addNode
+   *   @see DagGraphModel::addNode
    * - When a new connection is created.
-   *   @see DataFlowGraphModel::addConnection
+   *   @see DagGraphModel::addConnection
    * - When a node restored from JSON an needs to send data downstream.
-   *   @see DataFlowGraphModel::loadNode
+   *   @see DagGraphModel::loadNode
    */
     void onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex);
 
