@@ -119,7 +119,7 @@ bool DagGraphModel::connectionPossible(ConnectionId const connectionId) const
     };
 
     return getDataType(PortType::Out).id == getDataType(PortType::In).id
-           && portVacant(PortType::Out) && portVacant(PortType::In);
+           && portVacant(PortType::Out) && portVacant(PortType::In) && !willBeCyclic(connectionId);
 }
 
 void DagGraphModel::addConnection(ConnectionId const connectionId)
@@ -138,6 +138,8 @@ void DagGraphModel::addConnection(ConnectionId const connectionId)
                 connectionId.inPortIndex,
                 portDataToPropagate,
                 PortRole::Data);
+
+    isCyclic();
 }
 
 void DagGraphModel::sendConnectionCreation(ConnectionId const connectionId)
@@ -166,6 +168,63 @@ void DagGraphModel::sendConnectionDeletion(ConnectionId const connectionId)
         modeli->inputConnectionDeleted(connectionId);
         modelo->outputConnectionDeleted(connectionId);
     }
+}
+
+bool DagGraphModel::isCyclic(std::unordered_set<ConnectionId> const &connections) const
+{
+    qDebug() << "called";
+    std::unordered_map<NodeId, bool> visited;
+    std::unordered_map<NodeId, bool> recStack;
+
+    for (const auto &node : _models) {
+        if (depthFirstSearch(node.first,
+                             visited,
+                             recStack,
+                             connections.empty() ? _connectivity : connections)) {
+            // if (connections.empty()) // don't print if we are using custom connections
+            // this should never be true, if it is, there is a bug
+            qCritical() << "Directed Acyclic Graph model is cyclic";
+            return true;
+        }
+    }
+    return false;
+}
+
+bool DagGraphModel::willBeCyclic(ConnectionId const connectionId) const
+{
+    // std::unordered_set<ConnectionId> copy(_connectivity);
+    // copy.insert(connectionId);
+    // return isCyclic(copy);
+    // qDebug() << "IN: " << connectionId.inNodeId << "OUT:" << connectionId.outNodeId;
+    Q_UNUSED(connectionId);
+    qDebug() << "called";
+    return false;
+}
+
+bool DagGraphModel::depthFirstSearch(NodeId nodeId,
+                                     std::unordered_map<NodeId, bool> &visited,
+                                     std::unordered_map<NodeId, bool> &recStack,
+                                     std::unordered_set<ConnectionId> const &connections) const
+{
+    if (!visited[nodeId]) {
+        visited[nodeId] = true;
+        recStack[nodeId] = true;
+
+        for (const auto &conn : _connectivity) {
+            if (conn.outNodeId == nodeId) {
+                NodeId adjacent = conn.inNodeId;
+                if (!visited[adjacent]
+                    && depthFirstSearch(adjacent, visited, recStack, connections)) {
+                    return true;
+                }
+                if (recStack[adjacent]) {
+                    return true;
+                }
+            }
+        }
+    }
+    recStack[nodeId] = false;
+    return false;
 }
 
 bool DagGraphModel::nodeExists(NodeId const nodeId) const
@@ -501,6 +560,11 @@ void DagGraphModel::load(QJsonObject const &jsonDocument)
         // Restore the connection
         addConnection(connId);
     }
+}
+
+std::vector<NodeId> DagGraphModel::topologicalOrder() const
+{
+    return std::vector<NodeId>();
 }
 
 void DagGraphModel::onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex)
