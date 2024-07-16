@@ -14,9 +14,7 @@
 
 namespace QtNodes {
 
-class NODE_EDITOR_PUBLIC DataFlowGraphModel
-    : public AbstractGraphModel
-    , public Serializable
+class NODE_EDITOR_PUBLIC DataFlowGraphModel : public AbstractGraphModel, public Serializable
 {
     Q_OBJECT
 
@@ -96,8 +94,6 @@ public:
         return model;
     }
 
-    bool isEmpty() const { return _models.empty() && _connectivity.empty(); }
-
 Q_SIGNALS:
     void inPortDataWasSet(NodeId const, PortType const, PortIndex const);
 
@@ -129,7 +125,6 @@ private:
 
     NodeId _nextNodeId;
 
-    // this is all the nodes
     std::unordered_map<NodeId, std::unique_ptr<NodeDelegateModel>> _models;
 
     std::unordered_set<ConnectionId> _connectivity;

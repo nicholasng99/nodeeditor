@@ -109,7 +109,6 @@ QMenu *DataFlowGraphicsScene::createSceneMenu(QPointF const scenePos)
                     return;
                 }
 
-                // This is how nodes are created into the scene
                 this->undoStack().push(new CreateCommand(this, item->text(0), scenePos));
 
                 modelMenu->close();
@@ -147,33 +146,35 @@ QMenu *DataFlowGraphicsScene::createSceneMenu(QPointF const scenePos)
 
 bool DataFlowGraphicsScene::save() const
 {
-    if (_file.filePath().isEmpty() || _file.suffix().isEmpty())
-        return saveAs();
-    return writeToFile();
-}
+    QString fileName = QFileDialog::getSaveFileName(nullptr,
+                                                    tr("Open Flow Scene"),
+                                                    QDir::homePath(),
+                                                    tr("Flow Scene Files (*.flow)"));
 
-bool DataFlowGraphicsScene::saveAs() const
-{
-    _file.setFile(QFileDialog::getSaveFileName(nullptr,
-                                               tr("Open Flow Scene"),
-                                               QDir::homePath(),
-                                               tr("Flow Scene Files (*.flow)")));
-    if (_file.suffix().isEmpty())
-        return false;
-    return writeToFile();
+    if (!fileName.isEmpty()) {
+        if (!fileName.endsWith("flow", Qt::CaseInsensitive))
+            fileName += ".flow";
+
+        QFile file(fileName);
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(QJsonDocument(_graphModel.save()).toJson());
+            return true;
+        }
+    }
+    return false;
 }
 
 bool DataFlowGraphicsScene::load()
 {
-    _file.setFile(QFileDialog::getOpenFileName(nullptr,
-                                               tr("Open Flow Scene"),
-                                               QDir::homePath(),
-                                               tr("Flow Scene Files (*.flow)")));
+    QString fileName = QFileDialog::getOpenFileName(nullptr,
+                                                    tr("Open Flow Scene"),
+                                                    QDir::homePath(),
+                                                    tr("Flow Scene Files (*.flow)"));
 
-    if (!_file.exists())
+    if (!QFileInfo::exists(fileName))
         return false;
 
-    QFile file(_file.absoluteFilePath());
+    QFile file(fileName);
 
     if (!file.open(QIODevice::ReadOnly))
         return false;
@@ -186,18 +187,6 @@ bool DataFlowGraphicsScene::load()
 
     Q_EMIT sceneLoaded();
 
-    return true;
-}
-
-bool DataFlowGraphicsScene::writeToFile() const
-{
-    if (_file.suffix().compare("flow", Qt::CaseInsensitive) != 0)
-        _file.setFile(_file.dir(), _file.baseName() + ".flow");
-    QFile file(_file.absoluteFilePath());
-    if (!file.open(QIODevice::WriteOnly))
-        return false;
-    file.write(QJsonDocument(_graphModel.save()).toJson());
-    file.close();
     return true;
 }
 
