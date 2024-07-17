@@ -81,8 +81,9 @@ private:
     NodeId newNodeId() override { return _nextNodeId++; }
     void sendConnectionCreation(ConnectionId const connectionId);
     void sendConnectionDeletion(ConnectionId const connectionId);
-    bool isCyclic(std::unordered_set<ConnectionId> const &connections
-                  = std::unordered_set<ConnectionId>()) const;
+    bool isCyclic(
+        std::optional<std::reference_wrapper<const std::unordered_set<ConnectionId>>> connections
+        = std::nullopt) const;
     bool willBeCyclic(ConnectionId const connectionId) const;
     bool depthFirstSearch(NodeId nodeId,
                           std::unordered_map<NodeId, bool> &visited,

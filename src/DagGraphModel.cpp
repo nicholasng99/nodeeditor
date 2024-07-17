@@ -139,6 +139,7 @@ void DagGraphModel::addConnection(ConnectionId const connectionId)
                 portDataToPropagate,
                 PortRole::Data);
 
+    // sanity check
     isCyclic();
 }
 
@@ -170,20 +171,19 @@ void DagGraphModel::sendConnectionDeletion(ConnectionId const connectionId)
     }
 }
 
-bool DagGraphModel::isCyclic(std::unordered_set<ConnectionId> const &connections) const
+bool DagGraphModel::isCyclic(
+    std::optional<std::reference_wrapper<const std::unordered_set<ConnectionId>>> connections) const
 {
-    qDebug() << "called";
+    const std::unordered_set<ConnectionId> &conns = connections ? connections->get()
+                                                                : _connectivity;
     std::unordered_map<NodeId, bool> visited;
     std::unordered_map<NodeId, bool> recStack;
 
     for (const auto &node : _models) {
-        if (depthFirstSearch(node.first,
-                             visited,
-                             recStack,
-                             connections.empty() ? _connectivity : connections)) {
-            // if (connections.empty()) // don't print if we are using custom connections
-            // this should never be true, if it is, there is a bug
-            qCritical() << "Directed Acyclic Graph model is cyclic";
+        if (depthFirstSearch(node.first, visited, recStack, conns)) {
+            if (!connections) // don't print if we are using custom connections
+                // this should never be true, if it is, there is a bug
+                qCritical() << "Directed Acyclic Graph model is cyclic";
             return true;
         }
     }
@@ -192,13 +192,9 @@ bool DagGraphModel::isCyclic(std::unordered_set<ConnectionId> const &connections
 
 bool DagGraphModel::willBeCyclic(ConnectionId const connectionId) const
 {
-    // std::unordered_set<ConnectionId> copy(_connectivity);
-    // copy.insert(connectionId);
-    // return isCyclic(copy);
-    // qDebug() << "IN: " << connectionId.inNodeId << "OUT:" << connectionId.outNodeId;
-    Q_UNUSED(connectionId);
-    qDebug() << "called";
-    return false;
+    std::unordered_set<ConnectionId> copy(_connectivity);
+    copy.insert(connectionId);
+    return isCyclic(copy);
 }
 
 bool DagGraphModel::depthFirstSearch(NodeId nodeId,
@@ -210,7 +206,7 @@ bool DagGraphModel::depthFirstSearch(NodeId nodeId,
         visited[nodeId] = true;
         recStack[nodeId] = true;
 
-        for (const auto &conn : _connectivity) {
+        for (const auto &conn : connections) {
             if (conn.outNodeId == nodeId) {
                 NodeId adjacent = conn.inNodeId;
                 if (!visited[adjacent]
