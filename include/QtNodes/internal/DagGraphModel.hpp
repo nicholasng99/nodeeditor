@@ -89,6 +89,8 @@ private:
                           std::unordered_map<NodeId, bool> &visited,
                           std::unordered_map<NodeId, bool> &recStack,
                           std::unordered_set<ConnectionId> const &connections) const;
+    size_t hashNodesAndConnections(std::unordered_set<NodeId> const &nodes,
+                                   std::unordered_set<ConnectionId> const &connections) const;
 
 private Q_SLOTS:
     /**
@@ -111,6 +113,8 @@ private:
     std::unordered_map<NodeId, std::unique_ptr<NodeDelegateModel>> _models;
     std::unordered_set<ConnectionId> _connectivity;
     mutable std::unordered_map<NodeId, NodeGeometryData> _nodeGeometryData;
+    // cache is cleared when a node is added/deleted
+    mutable std::unordered_map<size_t, bool> _isCyclicCache;
 };
 
 } // namespace QtNodes

@@ -91,6 +91,8 @@ NodeId DagGraphModel::addNode(QString const nodeType)
 
         Q_EMIT nodeCreated(newId);
 
+        _isCyclicCache.clear();
+
         return newId;
     }
 
@@ -176,6 +178,13 @@ bool DagGraphModel::isCyclic(
 {
     const std::unordered_set<ConnectionId> &conns = connections ? connections->get()
                                                                 : _connectivity;
+
+    // check against cache whether the nodes + connections are already computed
+    const auto hash = hashNodesAndConnections(allNodeIds(), conns);
+    if (_isCyclicCache.count(hash) > 0)
+        return _isCyclicCache.at(hash);
+
+    qDebug() << "Computing isCyclic()";
     std::unordered_map<NodeId, bool> visited;
     std::unordered_map<NodeId, bool> recStack;
 
@@ -184,9 +193,11 @@ bool DagGraphModel::isCyclic(
             if (!connections) // don't print if we are using custom connections
                 // this should never be true, if it is, there is a bug
                 qCritical() << "Directed Acyclic Graph model is cyclic";
+            _isCyclicCache[hash] = true;
             return true;
         }
     }
+    _isCyclicCache[hash] = false;
     return false;
 }
 
@@ -221,6 +232,19 @@ bool DagGraphModel::depthFirstSearch(NodeId nodeId,
     }
     recStack[nodeId] = false;
     return false;
+}
+
+size_t DagGraphModel::hashNodesAndConnections(
+    std::unordered_set<NodeId> const &nodes,
+    std::unordered_set<ConnectionId> const &connections) const
+{
+    size_t hash = 0;
+    for (const auto &node : nodes)
+        hash ^= std::hash<uint>{}(node) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    for (const auto &connection : connections) {
+        hash ^= std::hash<ConnectionId>{}(connection) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    }
+    return hash;
 }
 
 bool DagGraphModel::nodeExists(NodeId const nodeId) const
@@ -453,6 +477,8 @@ bool DagGraphModel::deleteNode(NodeId const nodeId)
     _models.erase(nodeId);
 
     Q_EMIT nodeDeleted(nodeId);
+
+    _isCyclicCache.clear();
 
     return true;
 }
