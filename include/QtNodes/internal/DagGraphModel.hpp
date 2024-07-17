@@ -73,6 +73,8 @@ public:
     }
     bool isEmpty() const { return _models.empty() && _connectivity.empty(); }
     std::vector<NodeId> topologicalOrder() const;
+    // a graph is connected if every node is connected to form 1 graph, an empty graph is considered disconnected
+    bool isConnected() const;
 
 Q_SIGNALS:
     void inPortDataWasSet(NodeId const, PortType const, PortIndex const);
@@ -85,10 +87,6 @@ private:
         std::optional<std::reference_wrapper<const std::unordered_set<ConnectionId>>> connections
         = std::nullopt) const;
     bool willBeCyclic(ConnectionId const connectionId) const;
-    bool depthFirstSearch(NodeId nodeId,
-                          std::unordered_map<NodeId, bool> &visited,
-                          std::unordered_map<NodeId, bool> &recStack,
-                          std::unordered_set<ConnectionId> const &connections) const;
     size_t hashNodesAndConnections(std::unordered_set<NodeId> const &nodes,
                                    std::unordered_set<ConnectionId> const &connections) const;
 

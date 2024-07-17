@@ -3,7 +3,72 @@
 
 #include <QJsonArray>
 
+#include <stack>
 #include <stdexcept>
+
+namespace {
+bool isCyclicUtil(QtNodes::NodeId nodeId,
+                  std::unordered_map<QtNodes::NodeId, bool> &visited,
+                  std::unordered_map<QtNodes::NodeId, bool> &recStack,
+                  std::unordered_set<QtNodes::ConnectionId> const &connections)
+{
+    if (!visited[nodeId]) {
+        visited[nodeId] = true;
+        recStack[nodeId] = true;
+
+        for (const auto &conn : connections) {
+            if (conn.outNodeId == nodeId) {
+                QtNodes::NodeId adjacent = conn.inNodeId;
+                if (!visited[adjacent] && isCyclicUtil(adjacent, visited, recStack, connections)) {
+                    return true;
+                }
+                if (recStack[adjacent]) {
+                    return true;
+                }
+            }
+        }
+    }
+    recStack[nodeId] = false;
+    return false;
+}
+
+void topologicalSortUtil(QtNodes::NodeId nodeId,
+                         std::unordered_map<QtNodes::NodeId, bool> &visited,
+                         std::stack<QtNodes::NodeId> &stack,
+                         std::unordered_set<QtNodes::ConnectionId> const &connections)
+{
+    visited[nodeId] = true;
+
+    for (const auto &conn : connections) {
+        if (conn.outNodeId == nodeId) {
+            QtNodes::NodeId adjacent = conn.inNodeId;
+            if (!visited[adjacent]) {
+                topologicalSortUtil(adjacent, visited, stack, connections);
+            }
+        }
+    }
+    stack.push(nodeId);
+}
+
+void isConnectedUtil(QtNodes::NodeId nodeId,
+                     std::unordered_map<QtNodes::NodeId, bool> &visited,
+                     std::stack<QtNodes::NodeId> &stack,
+                     std::unordered_set<QtNodes::ConnectionId> const &connections)
+{
+    visited[nodeId] = true;
+
+    for (const auto &conn : connections) {
+        // we don't care about direction, just connectivity
+        if (conn.inNodeId == nodeId || conn.outNodeId == nodeId) {
+            QtNodes::NodeId adjacent = conn.inNodeId == nodeId ? conn.outNodeId : conn.inNodeId;
+            if (!visited[adjacent]) {
+                isConnectedUtil(adjacent, visited, stack, connections);
+            }
+        }
+    }
+    stack.push(nodeId);
+}
+} // namespace
 
 namespace QtNodes {
 
@@ -189,7 +254,7 @@ bool DagGraphModel::isCyclic(
     std::unordered_map<NodeId, bool> recStack;
 
     for (const auto &node : _models) {
-        if (depthFirstSearch(node.first, visited, recStack, conns)) {
+        if (isCyclicUtil(node.first, visited, recStack, conns)) {
             if (!connections) // don't print if we are using custom connections
                 // this should never be true, if it is, there is a bug
                 qCritical() << "Directed Acyclic Graph model is cyclic";
@@ -206,32 +271,6 @@ bool DagGraphModel::willBeCyclic(ConnectionId const connectionId) const
     std::unordered_set<ConnectionId> copy(_connectivity);
     copy.insert(connectionId);
     return isCyclic(copy);
-}
-
-bool DagGraphModel::depthFirstSearch(NodeId nodeId,
-                                     std::unordered_map<NodeId, bool> &visited,
-                                     std::unordered_map<NodeId, bool> &recStack,
-                                     std::unordered_set<ConnectionId> const &connections) const
-{
-    if (!visited[nodeId]) {
-        visited[nodeId] = true;
-        recStack[nodeId] = true;
-
-        for (const auto &conn : connections) {
-            if (conn.outNodeId == nodeId) {
-                NodeId adjacent = conn.inNodeId;
-                if (!visited[adjacent]
-                    && depthFirstSearch(adjacent, visited, recStack, connections)) {
-                    return true;
-                }
-                if (recStack[adjacent]) {
-                    return true;
-                }
-            }
-        }
-    }
-    recStack[nodeId] = false;
-    return false;
 }
 
 size_t DagGraphModel::hashNodesAndConnections(
@@ -586,7 +625,38 @@ void DagGraphModel::load(QJsonObject const &jsonDocument)
 
 std::vector<NodeId> DagGraphModel::topologicalOrder() const
 {
-    return std::vector<NodeId>();
+    std::stack<NodeId> stack;
+    std::unordered_map<NodeId, bool> visited;
+
+    for (const auto &node : _models) {
+        if (!visited[node.first]) {
+            topologicalSortUtil(node.first, visited, stack, _connectivity);
+        }
+    }
+
+    std::vector<NodeId> sortedNodes;
+    while (!stack.empty()) {
+        sortedNodes.push_back(stack.top());
+        stack.pop();
+    }
+    return sortedNodes;
+}
+
+bool DagGraphModel::isConnected() const
+{
+    std::stack<NodeId> stack;
+    std::unordered_map<NodeId, bool> visited;
+    if (_models.size() < 1)
+        return false;
+    isConnectedUtil(_models.begin()->first, visited, stack, _connectivity);
+    std::vector<NodeId> temp;
+    while (!stack.empty()) {
+        temp.push_back(stack.top());
+        stack.pop();
+    }
+    qDebug() << "Depth first search: " << temp;
+    return temp.size() == _models.size();
+    // return stack.size() == _models.size();
 }
 
 void DagGraphModel::onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex)
