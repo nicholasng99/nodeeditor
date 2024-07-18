@@ -86,8 +86,8 @@ set(CPP_SOURCE_FILES
     src/ConnectionStyle.cpp
     src/DataFlowGraphModel.cpp
     src/DataFlowGraphicsScene.cpp
-    src/DagGraphModel.cpp
-    src/DagGraphicsScene.cpp
+    src/DirectedAcyclicGraphModel.cpp
+    src/dagGraphicsScene.cpp
     src/DefaultHorizontalNodeGeometry.cpp
     src/DefaultVerticalNodeGeometry.cpp
     src/Definitions.cpp
@@ -118,7 +118,7 @@ set(HPP_HEADER_FILES
     include/QtNodes/internal/DataFlowGraphicsScene.hpp
     include/QtNodes/internal/DataFlowGraphModel.hpp
     include/QtNodes/internal/DagGraphicsScene.hpp
-    include/QtNodes/internal/DagGraphModel.hpp
+    include/QtNodes/internal/DirectedAcyclicGraphModel.hpp
     include/QtNodes/internal/DefaultNodePainter.hpp
     include/QtNodes/internal/Definitions.hpp
     include/QtNodes/internal/Export.hpp

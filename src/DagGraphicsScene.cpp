@@ -28,12 +28,12 @@
 
 namespace QtNodes {
 
-DagGraphicsScene::DagGraphicsScene(DagGraphModel &graphModel, QObject *parent)
+DagGraphicsScene::DagGraphicsScene(DirectedAcyclicGraphModel &graphModel, QObject *parent)
     : BasicGraphicsScene(graphModel, parent)
     , _graphModel(graphModel)
 {
     connect(&_graphModel,
-            &DagGraphModel::inPortDataWasSet,
+            &DirectedAcyclicGraphModel::inPortDataWasSet,
             [this](NodeId const nodeId, PortType const, PortIndex const) { onNodeUpdated(nodeId); });
 }
 

@@ -3,7 +3,7 @@
 #include <QFileInfo>
 
 #include "BasicGraphicsScene.hpp"
-#include "DagGraphModel.hpp"
+#include "DirectedAcyclicGraphModel.hpp"
 #include "Export.hpp"
 
 namespace QtNodes {
@@ -17,7 +17,7 @@ class NODE_EDITOR_PUBLIC DagGraphicsScene : public BasicGraphicsScene
 {
     Q_OBJECT
 public:
-    DagGraphicsScene(DagGraphModel &graphModel, QObject *parent = nullptr);
+    DagGraphicsScene(DirectedAcyclicGraphModel &graphModel, QObject *parent = nullptr);
     ~DagGraphicsScene() = default;
     std::vector<NodeId> selectedNodes() const;
     QMenu *createSceneMenu(QPointF const scenePos) override;
@@ -37,7 +37,7 @@ private:
     bool writeToFile() const;
 
     mutable QFileInfo _file;
-    DagGraphModel &_graphModel;
+    DirectedAcyclicGraphModel &_graphModel;
 };
 
 } // namespace QtNodes

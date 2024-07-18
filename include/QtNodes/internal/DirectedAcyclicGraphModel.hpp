@@ -14,7 +14,7 @@
 
 namespace QtNodes {
 
-class NODE_EDITOR_PUBLIC DagGraphModel
+class NODE_EDITOR_PUBLIC DirectedAcyclicGraphModel
     : public AbstractGraphModel
     , public Serializable
 {
@@ -26,7 +26,7 @@ public:
         QPointF pos;
     };
 
-    DagGraphModel(std::shared_ptr<NodeDelegateModelRegistry> registry);
+    DirectedAcyclicGraphModel(std::shared_ptr<NodeDelegateModelRegistry> registry);
     std::shared_ptr<NodeDelegateModelRegistry> dataModelRegistry() { return _registry; }
     std::unordered_set<NodeId> allNodeIds() const override;
     std::unordered_set<ConnectionId> allConnectionIds(NodeId const nodeId) const override;
@@ -95,11 +95,11 @@ private Q_SLOTS:
    * Fuction is called in three cases:
    *
    * - By underlying NodeDelegateModel when a node has new data to propagate.
-   *   @see DagGraphModel::addNode
+   *   @see DirectedAcyclicGraphModel::addNode
    * - When a new connection is created.
-   *   @see DagGraphModel::addConnection
+   *   @see DirectedAcyclicGraphModel::addConnection
    * - When a node restored from JSON an needs to send data downstream.
-   *   @see DagGraphModel::loadNode
+   *   @see DirectedAcyclicGraphModel::loadNode
    */
     void onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex);
     /// Function is called after detaching a connection.

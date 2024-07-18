@@ -1,4 +1,4 @@
-#include "DagGraphModel.hpp"
+#include "DirectedAcyclicGraphModel.hpp"
 #include "ConnectionIdHash.hpp"
 
 #include <QJsonArray>
@@ -72,12 +72,13 @@ void isConnectedUtil(QtNodes::NodeId nodeId,
 
 namespace QtNodes {
 
-DagGraphModel::DagGraphModel(std::shared_ptr<NodeDelegateModelRegistry> registry)
+DirectedAcyclicGraphModel::DirectedAcyclicGraphModel(
+    std::shared_ptr<NodeDelegateModelRegistry> registry)
     : _registry(std::move(registry))
     , _nextNodeId{0}
 {}
 
-std::unordered_set<NodeId> DagGraphModel::allNodeIds() const
+std::unordered_set<NodeId> DirectedAcyclicGraphModel::allNodeIds() const
 {
     std::unordered_set<NodeId> nodeIds;
     for_each(_models.begin(), _models.end(), [&nodeIds](auto const &p) { nodeIds.insert(p.first); });
@@ -85,7 +86,7 @@ std::unordered_set<NodeId> DagGraphModel::allNodeIds() const
     return nodeIds;
 }
 
-std::unordered_set<ConnectionId> DagGraphModel::allConnectionIds(NodeId const nodeId) const
+std::unordered_set<ConnectionId> DirectedAcyclicGraphModel::allConnectionIds(NodeId const nodeId) const
 {
     std::unordered_set<ConnectionId> result;
 
@@ -99,9 +100,9 @@ std::unordered_set<ConnectionId> DagGraphModel::allConnectionIds(NodeId const no
     return result;
 }
 
-std::unordered_set<ConnectionId> DagGraphModel::connections(NodeId nodeId,
-                                                            PortType portType,
-                                                            PortIndex portIndex) const
+std::unordered_set<ConnectionId> DirectedAcyclicGraphModel::connections(NodeId nodeId,
+                                                                        PortType portType,
+                                                                        PortIndex portIndex) const
 {
     std::unordered_set<ConnectionId> result;
 
@@ -116,12 +117,12 @@ std::unordered_set<ConnectionId> DagGraphModel::connections(NodeId nodeId,
     return result;
 }
 
-bool DagGraphModel::connectionExists(ConnectionId const connectionId) const
+bool DirectedAcyclicGraphModel::connectionExists(ConnectionId const connectionId) const
 {
     return (_connectivity.find(connectionId) != _connectivity.end());
 }
 
-NodeId DagGraphModel::addNode(QString const nodeType)
+NodeId DirectedAcyclicGraphModel::addNode(QString const nodeType)
 {
     std::unique_ptr<NodeDelegateModel> model = _registry->create(nodeType);
 
@@ -141,7 +142,10 @@ NodeId DagGraphModel::addNode(QString const nodeType)
                     portsAboutToBeDeleted(newId, portType, first, last);
                 });
 
-        connect(model.get(), &NodeDelegateModel::portsDeleted, this, &DagGraphModel::portsDeleted);
+        connect(model.get(),
+                &NodeDelegateModel::portsDeleted,
+                this,
+                &DirectedAcyclicGraphModel::portsDeleted);
 
         connect(model.get(),
                 &NodeDelegateModel::portsAboutToBeInserted,
@@ -150,7 +154,10 @@ NodeId DagGraphModel::addNode(QString const nodeType)
                     portsAboutToBeInserted(newId, portType, first, last);
                 });
 
-        connect(model.get(), &NodeDelegateModel::portsInserted, this, &DagGraphModel::portsInserted);
+        connect(model.get(),
+                &NodeDelegateModel::portsInserted,
+                this,
+                &DirectedAcyclicGraphModel::portsInserted);
 
         _models[newId] = std::move(model);
 
@@ -164,7 +171,7 @@ NodeId DagGraphModel::addNode(QString const nodeType)
     return InvalidNodeId;
 }
 
-bool DagGraphModel::connectionPossible(ConnectionId const connectionId) const
+bool DirectedAcyclicGraphModel::connectionPossible(ConnectionId const connectionId) const
 {
     auto getDataType = [&](PortType const portType) {
         return portData(getNodeId(portType, connectionId),
@@ -189,7 +196,7 @@ bool DagGraphModel::connectionPossible(ConnectionId const connectionId) const
            && portVacant(PortType::Out) && portVacant(PortType::In) && !willBeCyclic(connectionId);
 }
 
-void DagGraphModel::addConnection(ConnectionId const connectionId)
+void DirectedAcyclicGraphModel::addConnection(ConnectionId const connectionId)
 {
     _connectivity.insert(connectionId);
 
@@ -210,7 +217,7 @@ void DagGraphModel::addConnection(ConnectionId const connectionId)
     isCyclic();
 }
 
-void DagGraphModel::sendConnectionCreation(ConnectionId const connectionId)
+void DirectedAcyclicGraphModel::sendConnectionCreation(ConnectionId const connectionId)
 {
     Q_EMIT connectionCreated(connectionId);
 
@@ -224,7 +231,7 @@ void DagGraphModel::sendConnectionCreation(ConnectionId const connectionId)
     }
 }
 
-void DagGraphModel::sendConnectionDeletion(ConnectionId const connectionId)
+void DirectedAcyclicGraphModel::sendConnectionDeletion(ConnectionId const connectionId)
 {
     Q_EMIT connectionDeleted(connectionId);
 
@@ -238,7 +245,7 @@ void DagGraphModel::sendConnectionDeletion(ConnectionId const connectionId)
     }
 }
 
-bool DagGraphModel::isCyclic(
+bool DirectedAcyclicGraphModel::isCyclic(
     std::optional<std::reference_wrapper<const std::unordered_set<ConnectionId>>> connections) const
 {
     const std::unordered_set<ConnectionId> &conns = connections ? connections->get()
@@ -266,14 +273,14 @@ bool DagGraphModel::isCyclic(
     return false;
 }
 
-bool DagGraphModel::willBeCyclic(ConnectionId const connectionId) const
+bool DirectedAcyclicGraphModel::willBeCyclic(ConnectionId const connectionId) const
 {
     std::unordered_set<ConnectionId> copy(_connectivity);
     copy.insert(connectionId);
     return isCyclic(copy);
 }
 
-size_t DagGraphModel::hashNodesAndConnections(
+size_t DirectedAcyclicGraphModel::hashNodesAndConnections(
     std::unordered_set<NodeId> const &nodes,
     std::unordered_set<ConnectionId> const &connections) const
 {
@@ -286,12 +293,12 @@ size_t DagGraphModel::hashNodesAndConnections(
     return hash;
 }
 
-bool DagGraphModel::nodeExists(NodeId const nodeId) const
+bool DirectedAcyclicGraphModel::nodeExists(NodeId const nodeId) const
 {
     return (_models.find(nodeId) != _models.end());
 }
 
-QVariant DagGraphModel::nodeData(NodeId nodeId, NodeRole role) const
+QVariant DirectedAcyclicGraphModel::nodeData(NodeId nodeId, NodeRole role) const
 {
     QVariant result;
 
@@ -353,7 +360,7 @@ QVariant DagGraphModel::nodeData(NodeId nodeId, NodeRole role) const
     return result;
 }
 
-NodeFlags DagGraphModel::nodeFlags(NodeId nodeId) const
+NodeFlags DirectedAcyclicGraphModel::nodeFlags(NodeId nodeId) const
 {
     auto it = _models.find(nodeId);
 
@@ -363,7 +370,7 @@ NodeFlags DagGraphModel::nodeFlags(NodeId nodeId) const
     return NodeFlag::NoFlags;
 }
 
-bool DagGraphModel::setNodeData(NodeId nodeId, NodeRole role, QVariant value)
+bool DirectedAcyclicGraphModel::setNodeData(NodeId nodeId, NodeRole role, QVariant value)
 {
     Q_UNUSED(nodeId);
     Q_UNUSED(role);
@@ -412,10 +419,10 @@ bool DagGraphModel::setNodeData(NodeId nodeId, NodeRole role, QVariant value)
     return result;
 }
 
-QVariant DagGraphModel::portData(NodeId nodeId,
-                                 PortType portType,
-                                 PortIndex portIndex,
-                                 PortRole role) const
+QVariant DirectedAcyclicGraphModel::portData(NodeId nodeId,
+                                             PortType portType,
+                                             PortIndex portIndex,
+                                             PortRole role) const
 {
     QVariant result;
 
@@ -452,7 +459,7 @@ QVariant DagGraphModel::portData(NodeId nodeId,
     return result;
 }
 
-bool DagGraphModel::setPortData(
+bool DirectedAcyclicGraphModel::setPortData(
     NodeId nodeId, PortType portType, PortIndex portIndex, QVariant const &value, PortRole role)
 {
     Q_UNUSED(nodeId);
@@ -482,7 +489,7 @@ bool DagGraphModel::setPortData(
     return false;
 }
 
-bool DagGraphModel::deleteConnection(ConnectionId const connectionId)
+bool DirectedAcyclicGraphModel::deleteConnection(ConnectionId const connectionId)
 {
     bool disconnected = false;
 
@@ -504,7 +511,7 @@ bool DagGraphModel::deleteConnection(ConnectionId const connectionId)
     return disconnected;
 }
 
-bool DagGraphModel::deleteNode(NodeId const nodeId)
+bool DirectedAcyclicGraphModel::deleteNode(NodeId const nodeId)
 {
     // Delete connections to this node first.
     auto connectionIds = allConnectionIds(nodeId);
@@ -522,7 +529,7 @@ bool DagGraphModel::deleteNode(NodeId const nodeId)
     return true;
 }
 
-QJsonObject DagGraphModel::saveNode(NodeId const nodeId) const
+QJsonObject DirectedAcyclicGraphModel::saveNode(NodeId const nodeId) const
 {
     QJsonObject nodeJson;
 
@@ -542,7 +549,7 @@ QJsonObject DagGraphModel::saveNode(NodeId const nodeId) const
     return nodeJson;
 }
 
-QJsonObject DagGraphModel::save() const
+QJsonObject DirectedAcyclicGraphModel::save() const
 {
     QJsonObject sceneJson;
 
@@ -561,7 +568,7 @@ QJsonObject DagGraphModel::save() const
     return sceneJson;
 }
 
-void DagGraphModel::loadNode(QJsonObject const &nodeJson)
+void DirectedAcyclicGraphModel::loadNode(QJsonObject const &nodeJson)
 {
     // Possibility of the id clash when reading it from json and not generating a
     // new value.
@@ -603,7 +610,7 @@ void DagGraphModel::loadNode(QJsonObject const &nodeJson)
     }
 }
 
-void DagGraphModel::load(QJsonObject const &jsonDocument)
+void DirectedAcyclicGraphModel::load(QJsonObject const &jsonDocument)
 {
     QJsonArray nodesJsonArray = jsonDocument["nodes"].toArray();
 
@@ -623,7 +630,7 @@ void DagGraphModel::load(QJsonObject const &jsonDocument)
     }
 }
 
-std::vector<NodeId> DagGraphModel::topologicalOrder() const
+std::vector<NodeId> DirectedAcyclicGraphModel::topologicalOrder() const
 {
     std::stack<NodeId> stack;
     std::unordered_map<NodeId, bool> visited;
@@ -642,7 +649,7 @@ std::vector<NodeId> DagGraphModel::topologicalOrder() const
     return sortedNodes;
 }
 
-bool DagGraphModel::isConnected() const
+bool DirectedAcyclicGraphModel::isConnected() const
 {
     std::stack<NodeId> stack;
     std::unordered_map<NodeId, bool> visited;
@@ -659,7 +666,7 @@ bool DagGraphModel::isConnected() const
     // return stack.size() == _models.size();
 }
 
-void DagGraphModel::onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex)
+void DirectedAcyclicGraphModel::onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex)
 {
     std::unordered_set<ConnectionId> const &connected = connections(nodeId,
                                                                     PortType::Out,
@@ -672,7 +679,7 @@ void DagGraphModel::onOutPortDataUpdated(NodeId const nodeId, PortIndex const po
     }
 }
 
-void DagGraphModel::propagateEmptyDataTo(NodeId const nodeId, PortIndex const portIndex)
+void DirectedAcyclicGraphModel::propagateEmptyDataTo(NodeId const nodeId, PortIndex const portIndex)
 {
     QVariant emptyData{};
 
