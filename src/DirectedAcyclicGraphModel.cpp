@@ -256,7 +256,6 @@ bool DirectedAcyclicGraphModel::isCyclic(
     if (_isCyclicCache.count(hash) > 0)
         return _isCyclicCache.at(hash);
 
-    qDebug() << "Computing isCyclic()";
     std::unordered_map<NodeId, bool> visited;
     std::unordered_map<NodeId, bool> recStack;
 
@@ -656,14 +655,7 @@ bool DirectedAcyclicGraphModel::isConnected() const
     if (_models.size() < 1)
         return false;
     isConnectedUtil(_models.begin()->first, visited, stack, _connectivity);
-    std::vector<NodeId> temp;
-    while (!stack.empty()) {
-        temp.push_back(stack.top());
-        stack.pop();
-    }
-    qDebug() << "Depth first search: " << temp;
-    return temp.size() == _models.size();
-    // return stack.size() == _models.size();
+    return stack.size() == _models.size();
 }
 
 void DirectedAcyclicGraphModel::onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex)
