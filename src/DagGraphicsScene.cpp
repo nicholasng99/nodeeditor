@@ -26,6 +26,10 @@
 #include <stdexcept>
 #include <utility>
 
+namespace {
+const QString FILE_EXTENSION = ".dag";
+}
+
 namespace QtNodes {
 
 DagGraphicsScene::DagGraphicsScene(DirectedAcyclicGraphModel &graphModel, QObject *parent)
@@ -157,7 +161,7 @@ bool DagGraphicsScene::saveAs() const
     _file.setFile(QFileDialog::getSaveFileName(nullptr,
                                                tr("Open Flow Scene"),
                                                QDir::homePath(),
-                                               tr("Flow Scene Files (*.flow)")));
+                                               tr("Flow Scene Files (*%1)").arg(FILE_EXTENSION)));
     if (_file.suffix().isEmpty())
         return false;
     return writeToFile();
@@ -168,7 +172,7 @@ bool DagGraphicsScene::load()
     _file.setFile(QFileDialog::getOpenFileName(nullptr,
                                                tr("Open Flow Scene"),
                                                QDir::homePath(),
-                                               tr("Flow Scene Files (*.flow)")));
+                                               tr("Flow Scene Files (*%1)").arg(FILE_EXTENSION)));
 
     if (!_file.exists())
         return false;
@@ -192,7 +196,7 @@ bool DagGraphicsScene::load()
 bool DagGraphicsScene::writeToFile() const
 {
     if (_file.suffix().compare("flow", Qt::CaseInsensitive) != 0)
-        _file.setFile(_file.dir(), _file.baseName() + ".flow");
+        _file.setFile(_file.dir(), _file.baseName() + FILE_EXTENSION);
     QFile file(_file.absoluteFilePath());
     if (!file.open(QIODevice::WriteOnly))
         return false;
