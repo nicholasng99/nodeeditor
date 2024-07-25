@@ -126,6 +126,8 @@ Q_SIGNALS:
     /// Call this function when data and port moditications are finished.
     void portsInserted();
 
+    void contentUpdated();
+
 private:
     NodeStyle _nodeStyle;
 };

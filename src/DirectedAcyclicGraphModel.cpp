@@ -159,6 +159,10 @@ NodeId DirectedAcyclicGraphModel::addNode(QString const nodeType)
                 this,
                 &DirectedAcyclicGraphModel::portsInserted);
 
+        connect(model.get(), &NodeDelegateModel::contentUpdated, [newId, this]() {
+            Q_EMIT nodeUpdated(newId);
+        });
+
         _models[newId] = std::move(model);
 
         Q_EMIT nodeCreated(newId);
