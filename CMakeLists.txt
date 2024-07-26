@@ -87,7 +87,7 @@ set(CPP_SOURCE_FILES
     src/DataFlowGraphModel.cpp
     src/DataFlowGraphicsScene.cpp
     src/DirectedAcyclicGraphModel.cpp
-    src/dagGraphicsScene.cpp
+    src/DagGraphicsScene.cpp
     src/DefaultHorizontalNodeGeometry.cpp
     src/DefaultVerticalNodeGeometry.cpp
     src/Definitions.cpp
