@@ -21,6 +21,7 @@
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
+#include <QtCore/QStandardPaths>
 #include <QtCore/QtGlobal>
 
 #include <stdexcept>
@@ -160,7 +161,8 @@ bool DagGraphicsScene::saveAs() const
 {
     _file.setFile(QFileDialog::getSaveFileName(nullptr,
                                                tr("Open Flow Scene"),
-                                               QDir::homePath(),
+                                               QStandardPaths::writableLocation(
+                                                   QStandardPaths::DocumentsLocation),
                                                tr("Flow Scene Files (*%1)").arg(FILE_EXTENSION)));
     if (_file.suffix().isEmpty())
         return false;
@@ -171,7 +173,8 @@ bool DagGraphicsScene::load()
 {
     _file.setFile(QFileDialog::getOpenFileName(nullptr,
                                                tr("Open Flow Scene"),
-                                               QDir::homePath(),
+                                               QStandardPaths::writableLocation(
+                                                   QStandardPaths::DocumentsLocation),
                                                tr("Flow Scene Files (*%1)").arg(FILE_EXTENSION)));
 
     if (!_file.exists())
