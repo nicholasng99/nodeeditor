@@ -29,6 +29,7 @@ public Q_SLOTS:
     bool save() const;
     bool saveAs() const;
     bool load();
+    void createNodeAt(const QString &name, const QPointF &pos);
 
 Q_SIGNALS:
     void sceneLoaded();

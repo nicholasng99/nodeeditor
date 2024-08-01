@@ -113,9 +113,7 @@ QMenu *DagGraphicsScene::createSceneMenu(QPointF const scenePos)
                 if (!(item->flags() & (Qt::ItemIsSelectable))) {
                     return;
                 }
-
-                // This is how nodes are created into the scene
-                this->undoStack().push(new CreateCommand(this, item->text(0), scenePos));
+                this->createNodeAt(item->text(0), scenePos);
 
                 modelMenu->close();
             });
@@ -194,6 +192,11 @@ bool DagGraphicsScene::load()
     Q_EMIT sceneLoaded();
 
     return true;
+}
+
+void DagGraphicsScene::createNodeAt(const QString &name, const QPointF &pos)
+{
+    this->undoStack().push(new CreateCommand(this, name, pos));
 }
 
 bool DagGraphicsScene::writeToFile() const
