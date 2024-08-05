@@ -333,7 +333,7 @@ QVariant DirectedAcyclicGraphModel::nodeData(NodeId nodeId, NodeRole role) const
         break;
 
     case NodeRole::Style: {
-        auto style = StyleCollection::nodeStyle();
+        auto style = _models.at(nodeId)->nodeStyle();
         result = style.toJson().toVariantMap();
     } break;
 
