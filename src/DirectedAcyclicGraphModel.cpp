@@ -357,7 +357,10 @@ QVariant DirectedAcyclicGraphModel::nodeData(NodeId nodeId, NodeRole role) const
     case NodeRole::Widget: {
         auto w = model->embeddedWidget();
         result = QVariant::fromValue(w);
-    } break;
+        break;
+    }
+    case NodeRole::Shape:
+        result = static_cast<int>(_models.at(nodeId)->shape());
     }
 
     return result;
@@ -416,6 +419,9 @@ bool DirectedAcyclicGraphModel::setNodeData(NodeId nodeId, NodeRole role, QVaria
         break;
 
     case NodeRole::Widget:
+        break;
+
+    case NodeRole::Shape:
         break;
     }
 

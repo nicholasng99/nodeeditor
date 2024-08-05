@@ -20,7 +20,9 @@ class StyleCollection;
  * AbstractGraphModel.
  * This class is the same what has been called NodeDataModel before v3.
  */
-class NODE_EDITOR_PUBLIC NodeDelegateModel : public QObject, public Serializable
+class NODE_EDITOR_PUBLIC NodeDelegateModel
+    : public QObject
+    , public Serializable
 {
     Q_OBJECT
 
@@ -44,17 +46,16 @@ public:
     /// Name makes this model unique
     virtual QString name() const = 0;
 
-public:
+    virtual NodeShape shape() const = 0;
+
     QJsonObject save() const override;
 
     void load(QJsonObject const &) override;
 
-public:
     virtual unsigned int nPorts(PortType portType) const = 0;
 
     virtual NodeDataType dataType(PortType portType, PortIndex portIndex) const = 0;
 
-public:
     virtual ConnectionPolicy portConnectionPolicy(PortType, PortIndex) const;
 
     NodeStyle const &nodeStyle() const;
