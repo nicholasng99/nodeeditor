@@ -169,12 +169,18 @@ bool DagGraphicsScene::saveAs() const
 
 bool DagGraphicsScene::load()
 {
-    _file.setFile(QFileDialog::getOpenFileName(nullptr,
-                                               tr("Open Flow Scene"),
-                                               QStandardPaths::writableLocation(
-                                                   QStandardPaths::DocumentsLocation),
-                                               tr("Flow Scene Files (*%1)").arg(FILE_EXTENSION)));
+    auto filePath = QFileDialog::getOpenFileName(nullptr,
+                                                 tr("Open Flow Scene"),
+                                                 QStandardPaths::writableLocation(
+                                                     QStandardPaths::DocumentsLocation),
+                                                 tr("Flow Scene Files (*%1)").arg(FILE_EXTENSION));
 
+    return load(filePath);
+}
+
+bool DagGraphicsScene::load(const QString &filePath)
+{
+    _file.setFile(filePath);
     if (!_file.exists())
         return false;
 
