@@ -129,39 +129,7 @@ NodeId DirectedAcyclicGraphModel::addNode(QString const nodeType)
     if (model) {
         NodeId newId = newNodeId();
 
-        connect(model.get(),
-                &NodeDelegateModel::dataUpdated,
-                [newId, this](PortIndex const portIndex) {
-                    onOutPortDataUpdated(newId, portIndex);
-                });
-
-        connect(model.get(),
-                &NodeDelegateModel::portsAboutToBeDeleted,
-                this,
-                [newId, this](PortType const portType, PortIndex const first, PortIndex const last) {
-                    portsAboutToBeDeleted(newId, portType, first, last);
-                });
-
-        connect(model.get(),
-                &NodeDelegateModel::portsDeleted,
-                this,
-                &DirectedAcyclicGraphModel::portsDeleted);
-
-        connect(model.get(),
-                &NodeDelegateModel::portsAboutToBeInserted,
-                this,
-                [newId, this](PortType const portType, PortIndex const first, PortIndex const last) {
-                    portsAboutToBeInserted(newId, portType, first, last);
-                });
-
-        connect(model.get(),
-                &NodeDelegateModel::portsInserted,
-                this,
-                &DirectedAcyclicGraphModel::portsInserted);
-
-        connect(model.get(), &NodeDelegateModel::contentUpdated, [newId, this]() {
-            Q_EMIT nodeUpdated(newId);
-        });
+        initNodeConnections(model, newId);
 
         _models[newId] = std::move(model);
 
@@ -294,6 +262,42 @@ size_t DirectedAcyclicGraphModel::hashNodesAndConnections(
         hash ^= std::hash<ConnectionId>{}(connection) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
     }
     return hash;
+}
+
+void DirectedAcyclicGraphModel::initNodeConnections(const std::unique_ptr<NodeDelegateModel> &node,
+                                                    const NodeId &id)
+{
+    connect(node.get(), &NodeDelegateModel::dataUpdated, [id, this](PortIndex const portIndex) {
+        onOutPortDataUpdated(id, portIndex);
+    });
+
+    connect(node.get(),
+            &NodeDelegateModel::portsAboutToBeDeleted,
+            this,
+            [id, this](PortType const portType, PortIndex const first, PortIndex const last) {
+                portsAboutToBeDeleted(id, portType, first, last);
+            });
+
+    connect(node.get(),
+            &NodeDelegateModel::portsDeleted,
+            this,
+            &DirectedAcyclicGraphModel::portsDeleted);
+
+    connect(node.get(),
+            &NodeDelegateModel::portsAboutToBeInserted,
+            this,
+            [id, this](PortType const portType, PortIndex const first, PortIndex const last) {
+                portsAboutToBeInserted(id, portType, first, last);
+            });
+
+    connect(node.get(),
+            &NodeDelegateModel::portsInserted,
+            this,
+            &DirectedAcyclicGraphModel::portsInserted);
+
+    connect(node.get(), &NodeDelegateModel::contentUpdated, [id, this]() {
+        Q_EMIT nodeUpdated(id);
+    });
 }
 
 bool DirectedAcyclicGraphModel::nodeExists(NodeId const nodeId) const
@@ -597,11 +601,7 @@ void DirectedAcyclicGraphModel::loadNode(QJsonObject const &nodeJson)
     std::unique_ptr<NodeDelegateModel> model = _registry->create(delegateModelName);
 
     if (model) {
-        connect(model.get(),
-                &NodeDelegateModel::dataUpdated,
-                [restoredNodeId, this](PortIndex const portIndex) {
-                    onOutPortDataUpdated(restoredNodeId, portIndex);
-                });
+        initNodeConnections(model, restoredNodeId);
 
         _models[restoredNodeId] = std::move(model);
 

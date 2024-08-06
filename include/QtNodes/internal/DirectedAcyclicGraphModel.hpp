@@ -89,6 +89,7 @@ private:
     bool willBeCyclic(ConnectionId const connectionId) const;
     size_t hashNodesAndConnections(std::unordered_set<NodeId> const &nodes,
                                    std::unordered_set<ConnectionId> const &connections) const;
+    void initNodeConnections(const std::unique_ptr<NodeDelegateModel> &node, const NodeId &id);
 
 private Q_SLOTS:
     /**
