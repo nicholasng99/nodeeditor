@@ -79,7 +79,7 @@ public:
 Q_SIGNALS:
     void inPortDataWasSet(NodeId const, PortType const, PortIndex const);
 
-private:
+protected:
     NodeId newNodeId() override { return _nextNodeId++; }
     void sendConnectionCreation(ConnectionId const connectionId);
     void sendConnectionDeletion(ConnectionId const connectionId);
@@ -91,7 +91,7 @@ private:
                                    std::unordered_set<ConnectionId> const &connections) const;
     void initNodeConnections(const std::unique_ptr<NodeDelegateModel> &node, const NodeId &id);
 
-private Q_SLOTS:
+protected Q_SLOTS:
     /**
    * Fuction is called in three cases:
    *
@@ -105,6 +105,7 @@ private Q_SLOTS:
     void onOutPortDataUpdated(NodeId const nodeId, PortIndex const portIndex);
     /// Function is called after detaching a connection.
     void propagateEmptyDataTo(NodeId const nodeId, PortIndex const portIndex);
+    virtual void onNodeCreated(NodeId const nodeId);
 
 private:
     std::shared_ptr<NodeDelegateModelRegistry> _registry;

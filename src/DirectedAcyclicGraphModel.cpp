@@ -76,7 +76,12 @@ DirectedAcyclicGraphModel::DirectedAcyclicGraphModel(
     std::shared_ptr<NodeDelegateModelRegistry> registry)
     : _registry(std::move(registry))
     , _nextNodeId{0}
-{}
+{
+    connect(this,
+            &DirectedAcyclicGraphModel::nodeCreated,
+            this,
+            &DirectedAcyclicGraphModel::onNodeCreated);
+}
 
 std::unordered_set<NodeId> DirectedAcyclicGraphModel::allNodeIds() const
 {
@@ -128,8 +133,6 @@ NodeId DirectedAcyclicGraphModel::addNode(QString const nodeType)
 
     if (model) {
         NodeId newId = newNodeId();
-
-        initNodeConnections(model, newId);
 
         _models[newId] = std::move(model);
 
@@ -601,8 +604,6 @@ void DirectedAcyclicGraphModel::loadNode(QJsonObject const &nodeJson)
     std::unique_ptr<NodeDelegateModel> model = _registry->create(delegateModelName);
 
     if (model) {
-        initNodeConnections(model, restoredNodeId);
-
         _models[restoredNodeId] = std::move(model);
 
         Q_EMIT nodeCreated(restoredNodeId);
@@ -686,6 +687,15 @@ void DirectedAcyclicGraphModel::propagateEmptyDataTo(NodeId const nodeId, PortIn
     QVariant emptyData{};
 
     setPortData(nodeId, PortType::In, portIndex, emptyData, PortRole::Data);
+}
+
+void DirectedAcyclicGraphModel::onNodeCreated(NodeId const nodeId)
+{
+    auto it = _models.find(nodeId);
+    if (it == _models.end())
+        return;
+    auto &model = it->second;
+    initNodeConnections(model, nodeId);
 }
 
 } // namespace QtNodes
