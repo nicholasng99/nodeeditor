@@ -24,6 +24,7 @@ public:
     QFileInfo getFile() const { return _file; }
     bool isEmpty() const { return _graphModel.isEmpty(); }
     bool isBlank() const { return _graphModel.isEmpty(); }
+    void setFile(const QFileInfo &file) { _file = file; }
 
 public Q_SLOTS:
     bool save() const;
