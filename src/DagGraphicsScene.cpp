@@ -28,7 +28,7 @@
 #include <utility>
 
 namespace {
-const QString FILE_EXTENSION = ".dag";
+const QString FILE_EXTENSION = "dag";
 }
 
 namespace QtNodes {
@@ -148,43 +148,26 @@ QMenu *DagGraphicsScene::createSceneMenu(QPointF const scenePos)
     return modelMenu;
 }
 
-bool DagGraphicsScene::save() const
+bool DagGraphicsScene::save(const QString &filePath) const
 {
-    if (_file.filePath().isEmpty() || _file.suffix().isEmpty())
-        return saveAs();
-    return writeToFile();
-}
-
-bool DagGraphicsScene::saveAs() const
-{
-    _file.setFile(QFileDialog::getSaveFileName(nullptr,
-                                               tr("Open Flow Scene"),
-                                               QStandardPaths::writableLocation(
-                                                   QStandardPaths::DocumentsLocation),
-                                               tr("Flow Scene Files (*%1)").arg(FILE_EXTENSION)));
-    if (_file.suffix().isEmpty())
+    QFileInfo fileInfo(filePath);
+    if (fileInfo.suffix().compare("dag", Qt::CaseInsensitive) != 0)
+        fileInfo.setFile(fileInfo.dir(), fileInfo.baseName() + '.' + FILE_EXTENSION);
+    QFile file(fileInfo.absoluteFilePath());
+    if (!file.open(QIODevice::WriteOnly))
         return false;
-    return writeToFile();
-}
-
-bool DagGraphicsScene::load()
-{
-    auto filePath = QFileDialog::getOpenFileName(nullptr,
-                                                 tr("Open Flow Scene"),
-                                                 QStandardPaths::writableLocation(
-                                                     QStandardPaths::DocumentsLocation),
-                                                 tr("Flow Scene Files (*%1)").arg(FILE_EXTENSION));
-
-    return load(filePath);
+    file.write(QJsonDocument(_graphModel.save()).toJson());
+    file.close();
+    return true;
 }
 
 bool DagGraphicsScene::load(const QString &filePath)
 {
-    _file.setFile(filePath);
-    if (!_file.exists())
+    QFileInfo fileInfo(filePath);
+    if (!fileInfo.exists() || fileInfo.suffix() != FILE_EXTENSION)
         return false;
 
-    QFile file(_file.absoluteFilePath());
+    QFile file(fileInfo.absoluteFilePath());
 
     if (!file.open(QIODevice::ReadOnly))
         return false;
@@ -203,18 +186,6 @@ bool DagGraphicsScene::load(const QString &filePath)
 void DagGraphicsScene::createNodeAt(const QString &name, const QPointF &pos)
 {
     this->undoStack().push(new CreateCommand(this, name, pos));
-}
-
-bool DagGraphicsScene::writeToFile() const
-{
-    if (_file.suffix().compare("flow", Qt::CaseInsensitive) != 0)
-        _file.setFile(_file.dir(), _file.baseName() + FILE_EXTENSION);
-    QFile file(_file.absoluteFilePath());
-    if (!file.open(QIODevice::WriteOnly))
-        return false;
-    file.write(QJsonDocument(_graphModel.save()).toJson());
-    file.close();
-    return true;
 }
 
 } // namespace QtNodes

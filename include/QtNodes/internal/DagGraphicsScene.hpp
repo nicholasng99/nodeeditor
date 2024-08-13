@@ -21,15 +21,11 @@ public:
     ~DagGraphicsScene() = default;
     std::vector<NodeId> selectedNodes() const;
     QMenu *createSceneMenu(QPointF const scenePos) override;
-    QFileInfo getFile() const { return _file; }
     bool isEmpty() const { return _graphModel.isEmpty(); }
     bool isBlank() const { return _graphModel.isEmpty(); }
-    void setFile(const QFileInfo &file) { _file = file; }
 
 public Q_SLOTS:
-    bool save() const;
-    bool saveAs() const;
-    bool load();
+    bool save(const QString &filePath) const;
     bool load(const QString &filePath);
     void createNodeAt(const QString &name, const QPointF &pos);
 
@@ -37,9 +33,6 @@ Q_SIGNALS:
     void sceneLoaded();
 
 private:
-    bool writeToFile() const;
-
-    mutable QFileInfo _file;
     DirectedAcyclicGraphModel &_graphModel;
 };
 
