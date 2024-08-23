@@ -368,6 +368,7 @@ QVariant DirectedAcyclicGraphModel::nodeData(NodeId nodeId, NodeRole role) const
     }
     case NodeRole::Shape:
         result = static_cast<int>(_models.at(nodeId)->shape());
+        break;
     }
 
     return result;

@@ -46,7 +46,7 @@ public:
     /// Name makes this model unique
     virtual QString name() const = 0;
 
-    virtual NodeShape shape() const = 0;
+    virtual NodeShape shape() const { return NodeShape::RoundedRectangle; };
 
     QJsonObject save() const override;
 
